@@ -1,2 +1,18 @@
-<h1>Leaderboard</h1>
-<p>Welcome to {{title}}</p>
+<table class="table">
+    <thead>
+      <tr>
+        <th>Position</th>
+        <th>Username</th>
+        <th>Runtime</th>
+      </tr>
+    </thead>
+    <tbody>
+    	{{#each leaders}}
+        <tr>
+        <td>{{@index}}</td>
+        <td>{{name}}</td>
+        <td>{{time}}s</td>
+      	</tr> 
+    	{{/each}}
+    </tbody>
+  </table>
