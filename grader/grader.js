@@ -51,6 +51,11 @@ function process(){
       console.log(`Downloading ${folderkey}`);
       if(filedata.type == "zip") {
         var dl = cw.process(`wget -q -P downloads ${constants.webServerIP}/uploads/${folderkey}`).death()
+          .catch((e) => {
+            console.error("Download error");
+            console.error(e);
+            error(filedata, e);
+          })
           .then((res) => {
             return cw.process(`unzip -j -o -d grader/java/${folderkey} downloads/${folderkey}`).death()
           });
