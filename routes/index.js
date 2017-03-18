@@ -9,6 +9,7 @@ var sanitizer = require('sanitizer');
 
 
 router.use(fileUpload());
+router.use("/uploads", express.static('uploads'));
 
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
