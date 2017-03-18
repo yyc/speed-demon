@@ -1,7 +1,6 @@
 <table class="table">
     <thead>
       <tr>
-        <th>Position</th>
         <th>Username</th>
         <th>Runtime</th>
       </tr>
@@ -9,14 +8,9 @@
     <tbody>
     	{{#each leaders}}
         <tr>
-        <td>{{@index}}</td>
         <td>{{name}}</td>
         <td>{{time}}s</td>
       	</tr> 
     	{{/each}}
     </tbody>
   </table>
-  <div id="histogram"> </div>
-  <script>
-    drawHistogram(histogram, {{leaders}});
-  </script>

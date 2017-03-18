@@ -1,82 +1,49 @@
-function histogramChart() {
-  var margin = {top: 0, right: 0, bottom: 20, left: 0},
-      width = 960,
-      height = 500;
+function drawHistogram(reference, data) {
 
-  var histogram = d3.layout.histogram(),
-      x = d3.scale.ordinal(),
-      y = d3.scale.linear(),
-      xAxis = d3.svg.axis().scale(x).orient("bottom").tickSize(6, 0);
+  $(reference).empty()
 
-  function chart(selection) {
-    selection.each(function(data) {
+  //The drawing code needs to reference a responsive elements dimensions
+  var width = $(reference).width();
+  var height = 250;  // We don't want the height to be responsive.
 
-      // Compute the histogram.
-      data = histogram(data);
+  var histogram = d3.layout.histogram() (data);
+   
+  var x = d3.scale.ordinal()
+      .domain(histogram.map(function(d) { return d.x; }))
+      .rangeRoundBands([0, width]);
+   
+  var y = d3.scale.linear()
+      .domain([0, d3.max(histogram.map(function(d) { return d.y; }))])
+      .range([0, height]);
+   
+  var svg = d3.select(reference).append("svg")
+      .attr("width", width)
+      .attr("height", 2 * height);
+   
+  svg.selectAll("rect")
+      .data(histogram)
+      .enter().append("rect")
+      .attr("width", x.rangeBand())
+      .attr("x", function(d) { return x(d.x); })
+      .attr("y", function(d) { return height - y(d.y); })
+      .attr("height", function(d) { return y(d.y); });
 
-      // Update the x-scale.
-      x.domain(data.map(function(d) { return d.x; }))
-       .rangeRoundBands([0, width - margin.left - margin.right], .1);
+  svg.append("line")
+      .attr("x1", 0)
+      .attr("x2", width)
+      .attr("y1", height)
+      .attr("y2", height)
 
-      // Update the y-scale.
-      y.domain([0, d3.max(data, function(d) { return d.y; })])
-       .range([height - margin.top - margin.bottom, 0]);
+  var xAxis = d3.svg.axis().scale(x).orient("bottom");
+  svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
 
-      // Select the svg element, if it exists.
-      var svg = d3.select(this).selectAll("svg").data([data]);
-
-      // Otherwise, create the skeletal chart.
-      var gEnter = svg.enter().append("svg").append("g");
-      gEnter.append("g").attr("class", "bars");
-      gEnter.append("g").attr("class", "x axis");
-
-      // Update the outer dimensions.
-      svg.attr("width", width)
-         .attr("height", height);
-
-      // Update the inner dimensions.
-      var g = svg.select("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-      // Update the bars.
-      var bar = svg.select(".bars").selectAll(".bar").data(data);
-      bar.enter().append("rect");
-      bar.exit().remove();
-      bar.attr("width", x.rangeBand())
-         .attr("x", function(d) { return x(d.x); })
-         .attr("y", function(d) { return y(d.y); })
-         .attr("height", function(d) { return y.range()[0] - y(d.y); })
-         .order();
-
-      // Update the x-axis.
-      g.select(".x.axis")
-          .attr("transform", "translate(0," + y.range()[0] + ")")
-          .call(xAxis);
-    });
-  }
-
-  chart.margin = function(_) {
-    if (!arguments.length) return margin;
-    margin = _;
-    return chart;
-  };
-
-  chart.width = function(_) {
-    if (!arguments.length) return width;
-    width = _;
-    return chart;
-  };
-
-  chart.height = function(_) {
-    if (!arguments.length) return height;
-    height = _;
-    return chart;
-  };
-
-  // Expose the histogram's value, range and bins method.
-  d3.rebind(chart, histogram, "value", "range", "bins");
-
-  // Expose the x-axis' tickFormat method.
-  d3.rebind(chart, xAxis, "tickFormat");
-  return chart;
+  var yAxis = d3.svg.axis().scale(y).orient("top");
+  svg.append("g")
+    .attr("class", "y axis")
+    .attr("transform", "translate(0," + width + ")")
+    .call(yAxis);
 }
+
