@@ -1,15 +1,28 @@
-<form action="" class="text-center vertical-center" method="post">
+<form action="" class="text-center vertical-center" method="post" encType="multipart/form-data">
   <div class="form-group">
-  	<h3> Only .java files are accepted. </h3>
-    <label>
-      Username
-      <input type="text" name="firstname">
+  	<h3>Instructions:</h3>
+    <ul>
+      <li> Upload either a single java file, or a zip file, containing all the relevant class files</li>
+      <li>(.ZIP, not .7z, .rar. .tar.gz or whatever you can think of)</li>
+      <li> All your classes should not belong to any package (i.e. no <code>package sg.nus.comp.cs2020</code> at the top)
+    </ul>
+    <label for="firstname">
+      <a alt="Kimi no na wa?"> Your Name</a>
     </label>
-    <br>
-    <label>
-    	<input type="file" name="submission" accept=".java" id="file-input">
+    <input type="text" id="firstname" name="firstname" placeholder="Zaphod Beeblebrox" required>
+    <br />
+    <label for="classname">
+      Class Name
     </label>
-    <br>
+    <input type="text" id="classname" name="classname" placeholder="YourNamePS5" required>
+    <br />
+    (The class we should call to run your program (usually YourNamePS5).
+    <br />
+    <label for="submission">
+      Submission File
+      <input type="file" id="submission" name="file" accept=".java,.zip" required/>
+    </label>
+    <br />
     <label class="btn btn-primary">
     <input type="submit" style="display:none;">
     Submit
