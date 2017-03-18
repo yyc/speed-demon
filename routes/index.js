@@ -6,6 +6,7 @@ let bluebird = require("bluebird");
 var fileUpload = require('express-fileupload');
 var shortid =require('shortid');
 var sanitizer = require('sanitizer');
+var fs = require('fs');
 
 
 router.use(fileUpload());
@@ -14,6 +15,9 @@ router.use("/uploads", express.static('uploads'));
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 
+fs.mkdir('uploads', function(err){
+  console.log(err || "uploads folder created");
+});
 var db = redis.createClient(constants.redisConnectionOptions);
 
 db.on('error', function(err){
