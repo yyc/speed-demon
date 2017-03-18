@@ -14,7 +14,7 @@ router.use("/uploads", express.static('uploads'));
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 
-var db = redis.createClient();
+var db = redis.createClient(constants.redisConnectionOptions);
 
 db.on('error', function(err){
   console.error("error");
