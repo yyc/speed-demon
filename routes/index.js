@@ -3,6 +3,9 @@ var router = express.Router();
 var redis = require("redis");
 var constants = require("../constants");
 let bluebird = require("bluebird");
+var fileUpload = require('express-fileupload');
+
+router.use(fileUpload());
 
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
@@ -38,6 +41,12 @@ router.get('/', function(req, res, next) {
 
 router.get('/submit', function(req, res, next) {
   res.render('upload', {title: 'New Submission'});
+});
+
+router.post('/submit', function(req, res, next) {
+  console.log(req.body);
+  console.log(req.files);
+  res.end("okay");
 });
 
 router.get('/submission/:id', function(req, res, next) {
