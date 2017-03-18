@@ -59,9 +59,10 @@ router.post('/submit', function(req, res, next) {
     classname: sanitizer.escape(req.body.classname),
     name: sanitizer.sanitize(req.body.firstname),
   }
+  console.log(req.files.file.mimetype);
   if(req.files.file.mimetype == "application/zip") {
     data.type = "zip";
-  } else if(req.files.file.mimetype == "text/java") {
+  } else if(req.files.file.mimetype == "application/octet-stream") {
     data.type = "java";
   } else {
       return res.render('upload', {title: "New Submission", error: "Invalid filetype"});

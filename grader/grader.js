@@ -48,25 +48,27 @@ function process(){
       filedata = JSON.parse(filedata);
       let classname = filedata.classname;
       let folderkey = filedata.key
-      console.log(`Downloading ${folderkey}`);
+      console.log(filedata);
       if(filedata.type == "zip") {
         var dl = cw.process(`wget -q -P downloads ${constants.webServerIP}/uploads/${folderkey}`).death()
           .catch((e) => {
             console.error("Download error");
-            console.error(e);
-            error(filedata, e);
+            error(filedata, "Download Error");
           })
           .then((res) => {
             return cw.process(`unzip -j -o -d grader/java/${folderkey} downloads/${folderkey}`).death()
           });
       } else {
-        var dl = cw.process(`wget -P grader/java/${folderkey}/${classname}.java ${constants.webServerIP}/uploads/${folderkey}`).death();
+        var dl = cw.process(`mkdir grader/java/${folderkey}`).death()
+          .then(() => cw.process(`wget -O grader/java/${folderkey}/${classname}.java ${constants.webServerIP}/uploads/${folderkey}`).death());
       }
       dl.catch((e) => {
         console.error(e);
-        error(filedata, e);})
+        error(filedata, "Download Error");
+      })
         .then(() => {
           let command = `javac -cp ./grader/java/${folderkey} ./grader/java/${folderkey}/${classname}.java`;
+          console.log(command);
           var proc = cw.process(command, /.+/);
           return proc.death()
         })
@@ -74,7 +76,7 @@ function process(){
           test(filedata);
         })
         .catch((e) => {
-          error(filedata, e);
+          error(filedata, "Compilation Error");
         })
     });
 }
