@@ -71,7 +71,7 @@ router.post('/submit', function(req, res, next) {
      .then(() => {
        db.publish(constants.pubSubName, "new");
      })
-    db.hset(constants.resultsKey, id, "")
+    db.hsetAsync(constants.resultsKey, id, "")
      .then(() => {
        res.redirect(`/submission/${id}`);
      })
