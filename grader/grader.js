@@ -102,7 +102,7 @@ function runTestCase(filedata, files, result){
   }
   let startTime = Date.now();
   let filename = files.shift();
-  let command = `java -classpath grader/java/${filedata.key} ${filedata.classname} grader/testcases/${filename}`
+  let command = `java -classpath grader/java/${filedata.key} -Xmx1500m ${filedata.classname} grader/testcases/${filename}`
   var proc = cw.process(command, /[0-9]+/);
   proc.ready(constants.executionTimeout)
     .then((res) => {
