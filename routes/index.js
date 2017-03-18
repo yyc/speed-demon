@@ -4,6 +4,9 @@ var redis = require("redis");
 var constants = require("../constants");
 let bluebird = require("bluebird");
 var fileUpload = require('express-fileupload');
+var shortid =require('shortid');
+var sanitizer = require('sanitizer');
+
 
 router.use(fileUpload());
 
@@ -15,8 +18,6 @@ var db = redis.createClient();
 db.on('error', function(err){
   console.log("error")
 })
-
-// Advay: Here are stubs for you to test the layout
 
 /* Home page: Leaderboard */
 router.get('/', function(req, res, next) {
@@ -44,13 +45,49 @@ router.get('/submit', function(req, res, next) {
 });
 
 router.post('/submit', function(req, res, next) {
-  console.log(req.body);
-  console.log(req.files);
-  res.end("okay");
+  var id = shortid.generate();
+  if(!req.body || !req.body.firstname || !req.body.classname || !req.files || !req.files.file) {
+    res.render('upload', {title: 'New Submission', error: "Missing fields"});
+    return;
+  }
+  var data = {key: id,
+    classname: sanitizer.escape(req.body.classname),
+    name: sanitizer.sanitize(req.body.firstname),
+  }
+  if(req.files.file.mimetype == "application/zip") {
+    data.type = "zip";
+  } else if(req.files.file.mimetype == "text/java") {
+    data.type = "java";
+  } else {
+      return res.render('upload', {title: "New Submission", error: "Invalid filetype"});
+  }
+
+  req.files.file.mv(`uploads/${id}`, (err) => {
+    if(err) {
+      return res.render('upload', {title: 'New Submission', error: "err"});
+    }
+    db.lpushAsync(constants.queueName, JSON.stringify(data))
+     .then(() => {
+       db.publish(constants.pubSubName, "new");
+     })
+    db.hset(constants.resultsKey, id, "")
+     .then(() => {
+       res.redirect(`/submission/${id}`);
+     })
+  });
 });
 
 router.get('/submission/:id', function(req, res, next) {
   console.log(req.params['id']);
+  if(!shortid.isValid(req.params['id'])) {
+    return db.llenAsync(constants.processQueue)
+    .then((length) => {
+      res.render('notfound', {
+        title: 'Submission Not Found',
+        queueNumber: length
+      });
+    });
+  }
   db.hgetAsync(constants.resultsKey, escape(req.params['id']))
   .then((json) => {
     if(json == null) {
