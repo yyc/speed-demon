@@ -65,7 +65,7 @@ router.post('/submit', function(req, res, next) {
 
   req.files.file.mv(`uploads/${id}`, (err) => {
     if(err) {
-      return res.render('upload', {title: 'New Submission', error: "err"});
+      return res.render('upload', {title: 'New Submission', error: err});
     }
     db.lpushAsync(constants.queueName, JSON.stringify(data))
      .then(() => {
