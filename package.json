@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "startweb": "node ./bin/www",
+    "start": "node ./bin/www",
     "startgrader": "node grader/grader.js"
   },
   "dependencies": {
