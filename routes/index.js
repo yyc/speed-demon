@@ -17,7 +17,7 @@ bluebird.promisifyAll(redis.Multi.prototype);
 var db = redis.createClient();
 
 db.on('error', function(err){
-  console.log("error")
+  console.error("error");
 })
 
 /* Home page: Leaderboard */
