@@ -10,8 +10,8 @@ let cw = require("core-worker");
 var constants = require("../constants");
 var testfiles = constants.testfiles;
 
-let db = redis.createClient();
-let sub = redis.createClient();
+let db = redis.createClient(constants.redisConnectionOptions);
+let sub = redis.createClient(constants.redisConnectionOptions);
 sub.subscribe(constants.pubSubName);
 
 bluebird.promisifyAll(redis.RedisClient.prototype);
@@ -22,16 +22,18 @@ var mutex = false;
 // or waits for a pubsub
 function start() {
   listen()
-  // db.lpushAsync(constants.queueName, JSON.stringify({key: "asdasda", classname: "YuanPS5", name: "Yuan Yuchuan"}))
-  //  .then(() => {
-  //    db.publish(constants.pubSubName, "new");
-  //  })
+  db.lpushAsync(constants.queueName, JSON.stringify({key: "Hka_Ii9sg", classname: "YuanPS5",
+   name: "Yuan Yuchuan", type:"zip"}))
+   .then(() => {
+     db.publish(constants.pubSubName, "new");
+   })
 }
 
 function listen(){
   db.llenAsync(constants.queueName)
   .then(function(length){
     if(length == 0) {
+      console.log("waiting");
       sub.once("message", (channel, message) => {
         process();
       })
@@ -51,20 +53,34 @@ function process(){
       filedata = JSON.parse(filedata);
       let classname = filedata.classname;
       let folderkey = filedata.key
-      let command = `javac -cp ./grader/java/${folderkey} ./grader/java/${folderkey}/${classname}.java`;
-      var proc = cw.process(command, /.+/);
-      proc.death()
+      console.log(`Downloading ${folderkey}`);
+      if(filedata.type == "zip") {
+        var dl = cw.process(`wget -q -P downloads ${constants.webServerIP}/uploads/${folderkey}`).death()
+          .then((res) => {
+            return cw.process(`unzip -j -o -d grader/java/${folderkey} downloads/${folderkey}`).death()
+          });
+      } else {
+        var dl = cw.process(`wget -P grader/java/${folderkey}/${classname}.java ${constants.webServerIP}/uploads/${folderkey}`).death();
+      }
+      dl.catch((e) => {
+        console.error(e);
+        error(filedata, e);})
+        .then(() => {
+          let command = `javac -cp ./grader/java/${folderkey} ./grader/java/${folderkey}/${classname}.java`;
+          var proc = cw.process(command, /.+/);
+          return proc.death()
+        })
         .then((res) => {
           test(filedata);
         })
-        .catch((error) => {
-          error(filedata);
+        .catch((e) => {
+          error(filedata, e);
         })
     });
 }
 
-function error(filedata) {
-  return complete(filedata, {success:false, results:{}, compileError: true})
+function error(filedata, err) {
+  return complete(filedata, {success:false, results:{}, compileError: err})
 }
 
 function test(filedata) {
@@ -117,8 +133,10 @@ function complete(filedata, results) {
       .reduce((acc, value) => acc + value, 0);
     results.time = time;
   }
+  console.log(constants.resultsKey, filedata.key, JSON.stringify(results));
   db.hset(constants.resultsKey, filedata.key, JSON.stringify(results));
   if(results.success) {
+    console.log(constants.leaderboardKey, time, filedata.name);
     db.zadd(constants.leaderboardKey, time, filedata.name);
   }
 
