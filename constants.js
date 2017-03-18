@@ -9,6 +9,6 @@ module.exports = {
   pubSubName: "processPubSub",
   resultsKey: "results",
   leaderboardKey: "leaderboard",
-  webServerIP : "127.0.0.1",
-  redisConnectionOptions : {}
+  webServerIP : "127.0.0.1:3000",
+  redisConnectionOptions : process.env.REDIS_URL || {}
 }
