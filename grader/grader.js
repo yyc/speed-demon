@@ -104,7 +104,7 @@ function runTestCase(filedata, files, result){
   var proc = cw.process(command, /[0-9]+/);
   proc.ready(constants.executionTimeout)
     .then((res) => {
-      console.log(`completed ${filename}`);
+      console.log(`completed ${filename} ${res.data}`);
       if(res.result.data == testfiles[filename]) {
           result.results[filename] = Date.now() - startTime;
           return runTestCase(filedata, files, result);
