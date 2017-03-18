@@ -21,12 +21,7 @@ var mutex = false;
 // Processes any pending jobs in the queue,
 // or waits for a pubsub
 function start() {
-  listen()
-  db.lpushAsync(constants.queueName, JSON.stringify({key: "Hka_Ii9sg", classname: "YuanPS5",
-   name: "Yuan Yuchuan", type:"zip"}))
-   .then(() => {
-     db.publish(constants.pubSubName, "new");
-   })
+  listen();
 }
 
 function listen(){
