@@ -1,6 +1,11 @@
 var express = require('express');
 var router = express.Router();
 var redis = require("redis");
+var constants = require("../constants");
+let bluebird = require("bluebird");
+
+bluebird.promisifyAll(redis.RedisClient.prototype);
+bluebird.promisifyAll(redis.Multi.prototype);
 
 var db = redis.createClient();
 
@@ -12,35 +17,76 @@ db.on('error', function(err){
 
 /* Home page: Leaderboard */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Leaderboard',
-    leaders: [
-      {name: "Ary", time: 10.2},
-      {name: "Hailong", time: 12.2},
-      {name: "Advay", time: 15.9},
-      {name: "Jiayee", time: 20.2319290},
-      {name: "Herbert Illhan Tanujaya", time: 23},
-      {name: "Govind", time: 50.99},
-      {name: "yyc", time: 60.709},
-      {name: "Shiyuan", time: 60.709},
-    ]
-  });
+  db.zrangeAsync([constants.leaderboardKey, -10, -1, "WITHSCORES"])
+    .then((scores) => {
+      var leaders = [];
+      scores.reduce((name, time) => {
+        if(name) {
+          // Convert from miliseconds to seconds
+          time = time / 1000;
+          leaders.push({name, time});
+          return false;
+        } else{
+          return time;
+        }
+      }, false);
+      res.render('index', { title: 'Leaderboard',
+        leaders
+      });
+    })
 });
 
 router.get('/submit', function(req, res, next) {
   res.render('upload', {title: 'New Submission'});
-})
+});
 
-router.get('/pending', function(req, res, next) {
-  res.render('pending', {
-    title: 'Submission Pending',
-    queueNumber: 3
-  });
+router.get('/submission/:id', function(req, res, next) {
+  console.log(req.params['id']);
+  db.hgetAsync(constants.resultsKey, escape(req.params['id']))
+  .then((json) => {
+    if(json == null) {
+      return db.llenAsync(constants.processQueue)
+      .then((length) => {
+        res.render('notfound', {
+          title: 'Submission Not Found',
+          queueNumber: length
+        });
+      })
+    } else if(json == "") {
+      return db.llenAsync(constants.processQueue)
+      .then((length) => {
+        res.render('pending', {
+          title: 'Submission Pending',
+          queueNumber: length
+        });
+      })
+    } else {
+      try{
+        var json = JSON.parse(json);
+      } catch (e) {
+        res.render('error', {
+          message: "JSON parsing error",
+          error: e
+        });
+        return;
+      }
+      res.render('judged', {
+        title: 'Submission Evaluated',
+        correct: json.success,
+        results: json.results,
+        runtime: json.time / 1000,
+        // allTimes: encodeURIComponent(JSON.stringify(allTimes)),
+        filename: json.classname
+      });
+      return;
+    }
+  })
 })
 
 router.get('/correct', function(req, res, next) {
   var results = {"test1": true, "test2": true, "test3": true};
   var allTimes = [10.2, 12.2, 15.9, 20.2319290, 23, 50.99, 60.709, 60.709];
-  res.render('judged', { 
+  res.render('judged', {
     title: 'Submission Evaluated',
     correct: true,
     results,
@@ -53,7 +99,7 @@ router.get('/correct', function(req, res, next) {
 router.get('/wrong', function(req, res, next) {
   var results = {"test1": true, "test2": false, "test3": true};
   var allTimes = [10.2, 12.2, 15.9, 20.2319290, 23, 50.99, 60.709, 60.709];
-  res.render('judged', { 
+  res.render('judged', {
     title: 'Submission Evaluated',
     correct: false,
     results,
