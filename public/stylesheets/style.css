@@ -6,3 +6,29 @@ body {
 a {
   color: #00B7FF;
 }
+ 
+rect {
+  fill: steelblue;
+  stroke: white;
+}
+
+line {
+  stroke: black;
+  shape-rendering: crispEdges;
+}
+
+.bar text {
+  fill: #fff;
+  font: 10px sans-serif;
+}
+
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
