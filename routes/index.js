@@ -38,23 +38,25 @@ router.get('/pending', function(req, res, next) {
 })
 
 router.get('/correct', function(req, res, next) {
-  var results = [{"test1": true, "test2": true, "test3": true}];
+  var results = {"test1": true, "test2": true, "test3": true};
+  var allTimes = [10.2, 12.2, 15.9, 20.2319290, 23, 50.99, 60.709, 60.709];
   res.render('judged', { title: 'Submission Evaluated',
     correct: true,
     results,
     runtime: 10.3,
-    alltimes: [10.2, 12.2, 15.9, 20.2319290, 23, 50.99, 60.709, 60.709],
+    allTimes: encodeURIComponent(JSON.stringify(allTimes)),
     filename: "correctSubmissionPS5.java"
   });
 });
 
 router.get('/wrong', function(req, res, next) {
-  var results = [{"test1": true, "test2": false, "test3": true}];
+  var results = {"test1": true, "test2": false, "test3": true};
+  var allTimes = [10.2, 12.2, 15.9, 20.2319290, 23, 50.99, 60.709, 60.709];
   res.render('judged', { title: 'Submission Evaluated',
     correct: false,
     results,
     runtime: 7.2,
-    alltimes: [10.2, 12.2, 15.9, 20.2319290, 23, 50.99, 60.709, 60.709],
+    alltimes: encodeURIComponent(JSON.stringify(allTimes)),
     filename: "wrongSubmissionPS5.java"
   });
 });
