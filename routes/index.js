@@ -1,66 +1,140 @@
 var express = require('express');
 var router = express.Router();
 var redis = require("redis");
+var constants = require("../constants");
+let bluebird = require("bluebird");
+var fileUpload = require('express-fileupload');
+var shortid =require('shortid');
+var sanitizer = require('sanitizer');
+var fs = require('fs');
 
-var db = redis.createClient();
+
+router.use(fileUpload());
+router.use("/uploads", express.static('uploads'));
+
+bluebird.promisifyAll(redis.RedisClient.prototype);
+bluebird.promisifyAll(redis.Multi.prototype);
+
+fs.mkdir('uploads', function(err){
+  console.log(err || "uploads folder created");
+});
+var db = redis.createClient(constants.redisConnectionOptions);
 
 db.on('error', function(err){
-  console.log("error")
+  console.error("error");
 })
-
-// Advay: Here are stubs for you to test the layout
 
 /* Home page: Leaderboard */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Leaderboard',
-    leaders: [
-      {name: "Ary", time: 10.2},
-      {name: "Hailong", time: 12.2},
-      {name: "Advay", time: 15.9},
-      {name: "Jiayee", time: 20.2319290},
-      {name: "Herbert Illhan Tanujaya", time: 23},
-      {name: "Govind", time: 50.99},
-      {name: "yyc", time: 60.709},
-      {name: "Shiyuan", time: 60.709},
-    ]
-  });
+  db.zrangeAsync([constants.leaderboardKey, -10, -1, "WITHSCORES"])
+    .then((scores) => {
+      var leaders = [];
+      scores.reduce((name, time) => {
+        if(name) {
+          // Convert from miliseconds to seconds
+          time = time / 1000;
+          leaders.push({name, time});
+          return false;
+        } else{
+          return time;
+        }
+      }, false);
+      res.render('index', { title: 'CS2020 Speed Demon Leaderboard',
+        leaders
+      });
+    })
 });
 
 router.get('/submit', function(req, res, next) {
   res.render('upload', {title: 'New Submission'});
-})
+});
 
-router.get('/pending', function(req, res, next) {
-  res.render('pending', {
-    title: 'Submission Pending',
-    queueNumber: 3
-  });
-})
+router.post('/submit', function(req, res, next) {
+  var id = shortid.generate();
+  if(!req.body || !req.body.firstname || !req.body.classname || !req.files || !req.files.file) {
+    res.render('upload', {title: 'New Submission', error: "Missing fields"});
+    return;
+  }
+  var data = {key: id,
+    classname: sanitizer.escape(req.body.classname),
+    name: sanitizer.sanitize(req.body.firstname),
+  }
+  if(req.files.file.mimetype == "application/zip") {
+    data.type = "zip";
+  } else if(req.files.file.mimetype == "application/octet-stream" && req.files.file.name.includes('.zip')) {
+    data.type = "zip";
+  } else if(req.files.file.name.includes('.java'))
+    data.type = "java";
+  else {
+      return res.render('upload', {title: "New Submission", error: "Invalid filetype"});
+  }
 
-router.get('/correct', function(req, res, next) {
-  var results = {"test1": true, "test2": true, "test3": true};
-  var allTimes = [10.2, 12.2, 15.9, 20.2319290, 23, 50.99, 60.709, 60.709];
-  res.render('judged', { 
-    title: 'Submission Evaluated',
-    correct: true,
-    results,
-    runtime: 10.3,
-    allTimes: encodeURIComponent(JSON.stringify(allTimes)),
-    filename: "correctSubmissionPS5.java"
+  req.files.file.mv(`uploads/${id}`, (err) => {
+    if(err) {
+      return res.render('upload', {title: 'New Submission', error: err});
+    }
+    db.lpushAsync(constants.queueName, JSON.stringify(data))
+     .then(() => {
+       db.publish(constants.pubSubName, "new");
+     })
+    db.hsetAsync(constants.resultsKey, id, "")
+     .then(() => {
+       res.redirect(`/submission/${id}`);
+     })
   });
 });
 
-router.get('/wrong', function(req, res, next) {
-  var results = {"test1": true, "test2": false, "test3": true};
-  var allTimes = [10.2, 12.2, 15.9, 20.2319290, 23, 50.99, 60.709, 60.709];
-  res.render('judged', { 
-    title: 'Submission Evaluated',
-    correct: false,
-    results,
-    runtime: 7.2,
-    alltimes: encodeURIComponent(JSON.stringify(allTimes)),
-    filename: "wrongSubmissionPS5.java"
-  });
-});
+router.get('/submission/:id', function(req, res, next) {
+  console.log(req.params['id']);
+  if(!shortid.isValid(req.params['id'])) {
+    return db.llenAsync(constants.processQueue)
+    .then((length) => {
+      res.render('notfound', {
+        title: 'Submission Not Found',
+        queueNumber: length
+      });
+    });
+  }
+  db.hgetAsync(constants.resultsKey, escape(req.params['id']))
+  .then((json) => {
+    if(json == null) {
+      return db.llenAsync(constants.processQueue)
+      .then((length) => {
+        res.render('notfound', {
+          title: 'Submission Not Found',
+          queueNumber: length
+        });
+      })
+    } else if(json == "") {
+      return db.llenAsync(constants.processQueue)
+      .then((length) => {
+        res.render('pending', {
+          title: 'Submission Pending',
+          queueNumber: length
+        });
+      })
+    } else {
+      try{
+        var json = JSON.parse(json);
+      } catch (e) {
+        res.render('error', {
+          message: "JSON parsing error",
+          error: e
+        });
+        return;
+      }
+      res.render('judged', {
+        title: 'Submission Evaluated',
+        correct: json.success,
+        results: json.results,
+        runtime: json.time / 1000,
+        // allTimes: encodeURIComponent(JSON.stringify(allTimes)),
+        filename: json.classname,
+        error: json.runtimeError || json.compileError,
+      });
+      return;
+    }
+  })
+})
 
 module.exports = router;

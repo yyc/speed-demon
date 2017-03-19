@@ -2,17 +2,20 @@
 	<h3> Detailed Results for submission {{filename}} </h3>
 	{{#each results}}
 		{{#if this}}
-			<h5> Result for '{{@key}}': PASSED </h5>
+			<h5> Result for {{@key}}: PASSED </h5>
 		{{else}}
-			<h5> Result for '{{@key}}': FAILED </h5>
+			<h5> Result for {{@key}}: FAILED </h5>
 		{{/if}}
 	{{/each}}
 	{{# if correct}}
 	<h3 style="color:green"> SUBMISSION PASSED </h3>
+	<h3> Total Runtime: {{runtime}}s </h3>
 	{{else}}
 	<h3 style="color:red"> SUBMISSION FAILED </h3>
 	{{/if}}
-	<h3> Average Runtime: {{runtime}}s </h3>
+	{{# if error}}
+		Error: <pre>{{error}}</pre>
+	{{/if}}
 </div>
 <div class="histogram" >
 </div>
@@ -24,7 +27,3 @@
       drawHistogram(div, data);
     });
 </script>
-
-
-
-

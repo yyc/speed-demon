@@ -6,7 +6,7 @@ body {
 a {
   color: #00B7FF;
 }
- 
+
 rect {
   fill: steelblue;
   stroke: white;
@@ -37,4 +37,8 @@ line {
 .histogram {
   width: 50%;
   margin-left: 25%;
+}
+
+pre {
+  text-align: left;
 }
