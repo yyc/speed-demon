@@ -62,6 +62,7 @@ function process(){
         var dl = cw.process(`mkdir grader/java/${folderkey}`).death()
           .then(() => cw.process(`wget -O grader/java/${folderkey}/${classname}.java ${constants.webServerIP}/uploads/${folderkey}`).death());
       }
+      var compileProcess;
       dl.catch((e) => {
         console.error(e);
         error(filedata, "Download Error");
@@ -69,15 +70,20 @@ function process(){
         .then(() => {
           let command = `javac -cp ./grader/java/${folderkey} ./grader/java/${folderkey}/${classname}.java`;
           console.log(command);
-          var proc = cw.process(command, /.+/);
-          return proc.death()
+          compileProcess = cw.process(command, /.+/);
+          return compileProcess.death()
         })
         .then((res) => {
           test(filedata);
         })
         .catch((e) => {
           error(filedata, "Compilation Error");
+          var output = compileProcess.instance.instance.output.join('').replace(/<error>/g,'');
+          error(filedata, output);
         })
+        .catch((e) => {
+          console.log(e);
+        });
     });
 }
 
@@ -106,13 +112,17 @@ function runTestCase(filedata, files, result){
   var proc = cw.process(command, /[0-9]+/);
   proc.ready(constants.executionTimeout)
     .then((res) => {
-      console.log(`completed ${filename} ${res.result.data}`);
-      if(res.result.data == testfiles[filename]) {
+      var output = proc.instance.instance.output.join('');
+      console.log(`completed ${filename} ${output}`);
+      if(output == testfiles[filename]) {
           result.results[filename] = Date.now() - startTime;
           return runTestCase(filedata, files, result);
       } else{
         // console.log(`${filename} incorrect`, testfiles[filename], res.result.data);
         result.results[filename] = false;
+        if(output.includes("<error>")) {
+          result.runtimeError = output.replace(/<error>/g,'');
+        }
         return complete(filedata, result);
       }
     })
@@ -124,6 +134,7 @@ function runTestCase(filedata, files, result){
       } else{
         result.results[filename] = "Runtime Error";
         console.error(`exec error for ${command}: ${error}`);
+        result.error = proc.instance.instance.output;
       }
       return complete(filedata, result);
     });

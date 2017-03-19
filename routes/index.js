@@ -129,7 +129,7 @@ router.get('/submission/:id', function(req, res, next) {
         runtime: json.time / 1000,
         // allTimes: encodeURIComponent(JSON.stringify(allTimes)),
         filename: json.classname,
-        compileError: json.compileError
+        error: json.runtimeError || json.compileError,
       });
       return;
     }

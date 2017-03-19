@@ -6,7 +6,7 @@ body {
 a {
   color: #00B7FF;
 }
- 
+
 rect {
   fill: steelblue;
   stroke: white;
@@ -31,4 +31,8 @@ line {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
+}
+
+pre {
+  text-align: left;
 }

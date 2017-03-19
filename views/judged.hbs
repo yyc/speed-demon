@@ -13,8 +13,8 @@
 	{{else}}
 	<h3 style="color:red"> SUBMISSION FAILED </h3>
 	{{/if}}
-	{{# if compileError}}
-		Error: {{compileError}}
+	{{# if error}}
+		Error: <pre>{{error}}</pre>
 	{{/if}}
 </div>
 <!--
