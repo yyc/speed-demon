@@ -123,15 +123,24 @@ router.get('/submission/:id', function(req, res, next) {
         });
         return;
       }
-      res.render('judged', {
-        title: 'Submission Evaluated',
-        correct: json.success,
-        results: json.results,
-        runtime: json.time / 1000,
-        // allTimes: encodeURIComponent(JSON.stringify(allTimes)),
-        filename: json.classname,
-        error: json.runtimeError || json.compileError,
-      });
+      if(json.success) {
+        var ldb = db.zrangebyscoreAsync([constants.leaderboardKey, "-inf", "+inf", "WITHSCORES"])
+      } else {
+        var ldb = Promise.resolve([]);
+      }
+      ldb.then((ldrboard) => {
+        var scores = ldrboard.filter((elem, index) => index % 2).map((str) => parseInt(str) / 1000);
+        res.render('judged', {
+          title: 'Submission Evaluated',
+          correct: json.success,
+          results: json.results,
+          runtime: json.time / 1000,
+          // allTimes: encodeURIComponent(JSON.stringify(allTimes)),
+          filename: json.classname,
+          error: json.runtimeError || json.compileError,
+          allTimes: JSON.stringify(scores)
+        });
+      })
       return;
     }
   })
