@@ -28,10 +28,12 @@ function listen(){
   db.llenAsync(constants.queueName)
   .then(function(length){
     if(length == 0) {
-      console.log("waiting");
-      sub.once("message", (channel, message) => {
-        process();
-      })
+      if(sub.listenerCount("message") == 0){
+        console.log("waiting");
+        sub.once("message", (channel, message) => {
+          process();
+        });
+      }
     } else {
       process();
     }
