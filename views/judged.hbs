@@ -9,10 +9,13 @@
 	{{/each}}
 	{{# if correct}}
 	<h3 style="color:green"> SUBMISSION PASSED </h3>
+	<h3> Total Runtime: {{runtime}}s </h3>
 	{{else}}
 	<h3 style="color:red"> SUBMISSION FAILED </h3>
 	{{/if}}
-	<h3> Total Runtime: {{runtime}}s </h3>
+	{{# if compileError}}
+		Error: {{compileError}}
+	{{/if}}
 </div>
 <!--
 <div class="histogram" style="width:50%" >

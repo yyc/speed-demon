@@ -128,7 +128,8 @@ router.get('/submission/:id', function(req, res, next) {
         results: json.results,
         runtime: json.time / 1000,
         // allTimes: encodeURIComponent(JSON.stringify(allTimes)),
-        filename: json.classname
+        filename: json.classname,
+        compileError: json.compileError
       });
       return;
     }
