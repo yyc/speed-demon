@@ -117,12 +117,20 @@ function runTestCase(filedata, files, result){
       var output = proc.instance.instance.output.join('');
       console.log(`completed ${filename} ${output}`);
       if(output == testfiles[filename]) {
-          result.results[filename] = Date.now() - startTime;
+          let runtime = Date.now() - startTime;
+          if(constants.largeTests[filename] && runtime < constants.largeTests[filename]) {
+            result.results = [];
+            result.runtimeError = "CHEATING DETECTED\nHardcoding is not appreciated >:(";
+            db.zadd(constants.cheatersKey, runtime, filedata.name);
+            return complete(filedata, result);
+          }
+          result.results[filename] = runtime;
           return runTestCase(filedata, files, result);
       } else{
         // console.log(`${filename} incorrect`, testfiles[filename], res.result.data);
         result.results[filename] = false;
         if(output.includes("<error>")) {
+          console.log(output);
           result.runtimeError = output.replace(/<error>/g,'');
         } else {
           result.runtimeError = "Wrong Answer";

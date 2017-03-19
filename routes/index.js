@@ -26,8 +26,12 @@ db.on('error', function(err){
 
 /* Home page: Leaderboard */
 router.get('/', function(req, res, next) {
-  db.zrangeAsync([constants.leaderboardKey, 0, 15, "WITHSCORES"])
-    .then((scores) => {
+  Promise.all([
+    db.zrangeAsync([constants.leaderboardKey, 0, 15, "WITHSCORES"]),
+    db.zrangebyscoreAsync([constants.cheatersKey, '-inf','+inf'])])
+    .then((results) => {
+      scores = results[0];
+      cheaters = results[1] || [];
       var leaders = [];
       scores.reduce((name, time) => {
         if(name) {
@@ -40,7 +44,8 @@ router.get('/', function(req, res, next) {
         }
       }, false);
       res.render('index', { title: 'CS2020 Speed Demon Leaderboard',
-        leaders
+        leaders,
+        cheaters
       });
     })
 });
