@@ -10,6 +10,16 @@
 	{{# if correct}}
 	<h3 style="color:green"> SUBMISSION PASSED </h3>
 	<h3> Total Runtime: {{runtime}}s </h3>
+	<script type="text/javascript">
+		var data = JSON.parse(decodeURIComponent('{{{allTimes}}}'));
+		var div = "div.histogram";
+		$(document).ready(function(){
+			drawHistogram(div, data);
+			$(window).resize(function() {
+				drawHistogram(div, data);
+			});
+		});
+	</script>
 	{{else}}
 	<h3 style="color:red"> SUBMISSION FAILED </h3>
 	{{/if}}
@@ -17,14 +27,5 @@
 		Error: <pre>{{error}}</pre>
 	{{/if}}
 </div>
-<!--
-<div class="histogram" style="width:50%" >
+<div class="histogram" >
 </div>
-<script type="text/javascript">
-	var data = JSON.parse(decodeURIComponent("{{allTimes}}"));
-	var div = "div.histogram";
-	$(window).resize(function() {
-      drawHistogram(div, data);
-    });
-</script>
--->
