@@ -128,16 +128,19 @@ function runTestCase(filedata, files, result){
     })
     .catch((error) => {
       // Kill the program if it times out
-      proc.kill();
+      result.results[filename] = false;
       if(Date.now() - startTime > constants.executionTimeout) {
-        result.results[filename] = "Time Limit Exceeded";
+        result.runtimeError = "Time Limit Exceeded";
       } else{
-        result.results[filename] = "Runtime Error";
         console.error(`exec error for ${command}: ${error}`);
-        result.error = proc.instance.instance.output;
+        result.runtimeError = proc.instance.instance.output;
       }
       return complete(filedata, result);
     });
+    setTimeout(() => {
+      proc.kill();
+    }, constants.executionTimeout)
+
 }
 
 function complete(filedata, results) {
