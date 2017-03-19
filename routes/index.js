@@ -39,7 +39,7 @@ router.get('/', function(req, res, next) {
           return time;
         }
       }, false);
-      res.render('index', { title: 'Leaderboard',
+      res.render('index', { title: 'CS2020 Speed Demon Leaderboard',
         leaders
       });
     })
