@@ -26,7 +26,7 @@ db.on('error', function(err){
 
 /* Home page: Leaderboard */
 router.get('/', function(req, res, next) {
-  db.zrangeAsync([constants.leaderboardKey, -10, -1, "WITHSCORES"])
+  db.zrangeAsync([constants.leaderboardKey, -15, -1, "WITHSCORES"])
     .then((scores) => {
       var leaders = [];
       scores.reduce((name, time) => {
