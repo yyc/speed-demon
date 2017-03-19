@@ -122,6 +122,8 @@ function runTestCase(filedata, files, result){
         result.results[filename] = false;
         if(output.includes("<error>")) {
           result.runtimeError = output.replace(/<error>/g,'');
+        } else {
+          result.runtimeError = "Wrong Answer";
         }
         return complete(filedata, result);
       }
@@ -138,7 +140,9 @@ function runTestCase(filedata, files, result){
       return complete(filedata, result);
     });
     setTimeout(() => {
-      proc.kill();
+      if(proc.instance.instance.isRunning){
+        proc.kill();
+      }
     }, constants.executionTimeout)
 
 }
