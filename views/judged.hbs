@@ -13,10 +13,12 @@
 	<script type="text/javascript">
 		var data = JSON.parse(decodeURIComponent('{{{allTimes}}}'));
 		var div = "div.histogram";
-		drawHistogram(div, data);
-		$(window).resize(function() {
-	      drawHistogram(div, data);
-	    });
+		$(document).ready(function(){
+			drawHistogram(div, data);
+			$(window).resize(function() {
+				drawHistogram(div, data);
+			});
+		});
 	</script>
 	{{else}}
 	<h3 style="color:red"> SUBMISSION FAILED </h3>
