@@ -111,7 +111,7 @@ router.get('/submission/:id', function(req, res, next) {
         });
       })
     } else if(json == "") {
-      return db.llenAsync(constants.processQueue)
+      return db.llenAsync(constants.queueName)
       .then((length) => {
         res.render('pending', {
           title: 'Submission Pending',
