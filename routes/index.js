@@ -92,7 +92,7 @@ router.post('/submit', function(req, res, next) {
 router.get('/submission/:id', function(req, res, next) {
   console.log(req.params['id']);
   if(!shortid.isValid(req.params['id'])) {
-    return db.llenAsync(constants.processQueue)
+    return db.llenAsync(constants.queueName)
     .then((length) => {
       res.render('notfound', {
         title: 'Submission Not Found',
@@ -103,7 +103,7 @@ router.get('/submission/:id', function(req, res, next) {
   db.hgetAsync(constants.resultsKey, escape(req.params['id']))
   .then((json) => {
     if(json == null) {
-      return db.llenAsync(constants.processQueue)
+      return db.llenAsync(constants.queueName)
       .then((length) => {
         res.render('notfound', {
           title: 'Submission Not Found',
