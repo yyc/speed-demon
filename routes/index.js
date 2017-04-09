@@ -86,6 +86,7 @@ router.post('/submit', function(req, res, next) {
      .then(() => {
        res.redirect(`/submission/${id}`);
      })
+    db.hsetAsync(constants.nameIdKey, sanitizer.sanitize(req.body.firstname), id)
   });
 });
 

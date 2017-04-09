@@ -12,6 +12,7 @@ module.exports = {
   queueName: "processQueue",
   pubSubName: "processPubSub",
   resultsKey: "results",
+  nameIdKey: "names",
   leaderboardKey: "leaderboard",
   cheatersKey: "cheaters",
   webServerIP : "127.0.0.1:3000",
