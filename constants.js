@@ -2,6 +2,9 @@ const fs = require("fs");
 
 // Automatically reads from .in files in grader/testfiles
 var testfiles = {};
+fs.mkdir("uploads", function(err) {
+  console.log(err || "uploads folder created");
+});
 var files = fs
   .readdirSync("grader/testcases")
   .filter(str => str.indexOf(".in") != -1);
@@ -24,6 +27,7 @@ module.exports = {
   pubSubName: "processPubSub",
   resultsKey: "results",
   nameIdKey: "names",
+  secretIdKey: "secrets",
   leaderboardKey: "leaderboard",
   cheatersKey: "cheaters",
   webServerIP: "127.0.0.1:3000",

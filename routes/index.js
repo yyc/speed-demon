@@ -59,6 +59,7 @@ router.post("/submit", function(req, res, next) {
   if (
     !req.body ||
     !req.body.firstname ||
+    !req.body.secret ||
     !req.body.classname ||
     !req.files ||
     !req.files.file
@@ -69,7 +70,8 @@ router.post("/submit", function(req, res, next) {
   var data = {
     key: id,
     classname: sanitizer.escape(req.body.classname),
-    name: sanitizer.sanitize(req.body.firstname)
+    name: sanitizer.sanitize(req.body.firstname),
+    secret: sanitizer.sanitize(req.body.secret)
   };
   if (req.files.file.mimetype == "application/zip") {
     data.type = "zip";
@@ -99,6 +101,11 @@ router.post("/submit", function(req, res, next) {
     db.hsetAsync(
       constants.nameIdKey,
       sanitizer.sanitize(req.body.firstname),
+      id
+    );
+    db.hsetAsync(
+      constants.secretIdKey,
+      sanitizer.sanitize(req.body.secret),
       id
     );
   });
