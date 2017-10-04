@@ -1,5 +1,6 @@
 const fs = require("fs");
 
+// Automatically reads from .in files in grader/testfiles
 var testfiles = {};
 var files = fs
   .readdirSync("grader/testcases")
