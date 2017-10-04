@@ -2,8 +2,8 @@ const fs = require("fs");
 
 // Automatically reads from .in files in grader/testfiles
 var testfiles = {};
-fs.mkdir("uploads", function(err) {
-  console.log(err || "uploads folder created");
+fs.mkdir("grader/testcases", function(err) {
+  console.log(err || "testcases already exists");
 });
 var files = fs
   .readdirSync("grader/testcases")
