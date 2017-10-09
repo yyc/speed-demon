@@ -30,6 +30,6 @@ module.exports = {
   secretIdKey: "secrets",
   leaderboardKey: "leaderboard",
   cheatersKey: "cheaters",
-  webServerIP: "127.0.0.1:3000",
+  webServerIP: process.env.SERVER_URL || "127.0.0.1:3000",
   redisConnectionOptions: process.env.REDIS_URL || {}
 };

@@ -5,7 +5,7 @@ let redis = require("redis");
 let Docker = require("dockerode");
 let child_process = require("child_process");
 let cw = require("core-worker");
-
+let fs = require('fs');
 
 var constants = require("../constants");
 var testfiles = constants.testfiles;
@@ -23,6 +23,10 @@ var mutex = false;
 function start() {
   listen();
 }
+var folders = ['grader/java', 'downloads']
+fs.mkdir("grader/testcases", function(err) {
+  console.log(err || "testcases already exists");
+});
 
 function listen(){
   db.llenAsync(constants.queueName)
