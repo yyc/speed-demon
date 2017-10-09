@@ -7,12 +7,12 @@ fs.mkdir("grader/testcases", function(err) {
 });
 var files = fs
   .readdirSync("grader/testcases")
-  .filter(str => str.indexOf(".in") != -1);
+  .filter(str => str.indexOf(".out") != -1);
 for (var i = 0; i < files.length; i++) {
-  let infile = files[i];
-  let result = Number(fs.readFileSync(`grader/testcases/${infile}`));
-  let outfile = infile.replace(".in", ".out");
-  testfiles[outfile] = result;
+  let outfile = files[i];
+  let result = Number(fs.readFileSync(`grader/testcases/${outfile}`));
+  let infile = outfile.replace(".out", ".in");
+  testfiles[infile] = result;
 }
 
 module.exports = {
