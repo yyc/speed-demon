@@ -23,9 +23,11 @@ var mutex = false;
 function start() {
   listen();
 }
-var folders = ["grader/java", "downloads"];
-fs.mkdir("grader/testcases", function(err) {
-  console.log(err || "testcases already exists");
+
+["grader/java", "downloads"].forEach(folder => {
+  fs.mkdir(folder, function(err) {
+    console.log(err || `${folder} already exists`);
+  });
 });
 
 function listen() {
