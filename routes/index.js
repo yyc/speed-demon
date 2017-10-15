@@ -75,13 +75,11 @@ router.post("/submit", function(req, res, next) {
   };
   if (req.files.file.mimetype == "application/zip") {
     data.type = "zip";
-  } else if (
-    req.files.file.mimetype == "application/octet-stream" &&
-    req.files.file.name.includes(".zip")
-  ) {
+  } else if (req.files.file.name.includes(".zip")) {
     data.type = "zip";
   } else if (req.files.file.name.includes(".java")) data.type = "java";
   else {
+    console.log(req.files.file);
     return res.render("upload", {
       title: "New Submission",
       error: "Invalid filetype"
