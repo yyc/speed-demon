@@ -68,9 +68,11 @@ router.post("/submit", function(req, res, next) {
     return;
   }
   req.body.secret = req.body.secret.trim();
-  if (constants.validKeys[req.body.secret] == undefined) {
-    res.render("upload", { title: "New Submission", error: "Invalid Key" });
-    return;
+  if (Object.keys(constants.validKeys).length != 0) {
+    if (constants.validKeys[req.body.secret] == undefined) {
+      res.render("upload", { title: "New Submission", error: "Invalid Key" });
+      return;
+    }
   }
   var data = {
     key: id,

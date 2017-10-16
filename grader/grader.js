@@ -196,14 +196,16 @@ async function complete(filedata, results) {
   db.hset(constants.resultsKey, filedata.key, JSON.stringify(results));
   if (results.success) {
     console.log(constants.leaderboardKey, time, filedata.name);
-    let name = await db.hgetAsync(constants.secretsNamesKey, filedata.secret);
-    console.log(name);
-    if (name != null && name != undefined) {
-      console.log(`remove ${constants.leaderboardKey}, name`);
-      db.zrem(constants.leaderboardKey, name);
+    if (Object.keys(constants.validKeys).length != 0) {
+      let name = await db.hgetAsync(constants.secretsNamesKey, filedata.secret);
+      console.log(name);
+      if (name != null && name != undefined) {
+        console.log(`remove ${constants.leaderboardKey}, name`);
+        db.zrem(constants.leaderboardKey, name);
+      }
+      console.log(constants.secretsNamesKey, filedata.secret, filedata.name);
+      db.hsetAsync(constants.secretsNamesKey, filedata.secret, filedata.name);
     }
-    console.log(constants.secretsNamesKey, filedata.secret, filedata.name);
-    db.hsetAsync(constants.secretsNamesKey, filedata.secret, filedata.name);
     db.zadd(constants.leaderboardKey, time, filedata.name);
   }
 

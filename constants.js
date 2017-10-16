@@ -33,10 +33,8 @@ module.exports = {
   secretsNamesKey: "secretName",
   webServerIP: process.env.SERVER_URL || "127.0.0.1:3000",
   redisConnectionOptions: process.env.REDIS_URL || {},
-  validKeys: (process.env.VALID_KEYS || "test1,test2,aaa")
-    .split(",")
-    .reduce((hash, key) => {
-      hash[key] = true;
-      return hash;
-    }, {})
+  validKeys: (process.env.VALID_KEYS || "").split(",").reduce((hash, key) => {
+    hash[key] = true;
+    return hash;
+  }, {})
 };
