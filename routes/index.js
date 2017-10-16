@@ -67,6 +67,11 @@ router.post("/submit", function(req, res, next) {
     res.render("upload", { title: "New Submission", error: "Missing fields" });
     return;
   }
+  req.body.secret = req.body.secret.trim();
+  if (constants.validKeys[req.body.secret] == undefined) {
+    res.render("upload", { title: "New Submission", error: "Invalid Key" });
+    return;
+  }
   var data = {
     key: id,
     classname: sanitizer.escape(req.body.classname),
