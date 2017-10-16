@@ -30,6 +30,11 @@ module.exports = {
   secretIdKey: "secrets",
   leaderboardKey: "leaderboard",
   cheatersKey: "cheaters",
+  secretsNamesKey: "secretName",
   webServerIP: process.env.SERVER_URL || "127.0.0.1:3000",
-  redisConnectionOptions: process.env.REDIS_URL || {}
+  redisConnectionOptions: process.env.REDIS_URL || {},
+  validKeys: (process.env.VALID_KEYS || "").split(",").reduce((hash, key) => {
+    hash[key] = true;
+    return hash;
+  }, {})
 };
