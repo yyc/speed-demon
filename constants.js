@@ -19,7 +19,7 @@ module.exports = {
   testfiles,
   // large tests, with minimum time taken. Any less and cheating is likely
   largeTests: {
-    // "2.in": 1000
+    //    "2.in": 1000
   },
   // In milliseconds
   executionTimeout: 20000,

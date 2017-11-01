@@ -17,7 +17,8 @@ bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 
 var mutex = false;
-var list = require("./localFiles");
+var objs = require("./localFiles");
+var list = Object.keys(objs);
 // Processes any pending jobs in the queue,
 // or waits for a pubsub
 function start() {
@@ -31,9 +32,8 @@ function listen() {
 }
 
 function process() {
-  var tuple = list.pop();
-  var folderKey = tuple[0];
-  var classname = tuple[1];
+  var folderKey = list.pop();
+  var classname = objs[folderKey].classname;
   var filedata = {
     key: folderKey,
     name: folderKey,
