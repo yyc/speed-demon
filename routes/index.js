@@ -67,7 +67,7 @@ router.post("/submit", async (req, res, next) => {
     res.render("upload", { title: "New Submission", error: "Missing fields" });
     return;
   }
-  let { secret, classname } = req.body;
+  let { secret } = req.body;
   secret = secret.trim();
   let firstname = await db.hgetAsync(constants.secretsNamesKey, secret);
   if (firstname == null) {
@@ -102,7 +102,7 @@ router.post("/submit", async (req, res, next) => {
       db.hsetAsync(constants.resultsKey, id, ""),
 
       //This lets a user look up all their submissions, in submission order
-      db.lpushAsync(`${constants.secretsSubmissionPrefix}`, id),
+      db.lpushAsync(`${constants.secretsSubmissionPrefix}${secret}`, id),
       db.lpushAsync(constants.queueName, JSON.stringify(data))
     ]);
 
