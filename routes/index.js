@@ -54,7 +54,7 @@ router.get("/submit", function(req, res, next) {
   res.render("upload", { title: "New Submission" });
 });
 
-router.post("/submit", function(req, res, next) {
+router.post("/submit", async (req, res, next) => {
   var id = shortid.generate();
   if (
     !req.body ||
@@ -67,12 +67,12 @@ router.post("/submit", function(req, res, next) {
     res.render("upload", { title: "New Submission", error: "Missing fields" });
     return;
   }
-  req.body.secret = req.body.secret.trim();
-  if (Object.keys(constants.validKeys).length != 0) {
-    if (constants.validKeys[req.body.secret] == undefined) {
-      res.render("upload", { title: "New Submission", error: "Invalid Key" });
-      return;
-    }
+  let { secret, classname } = req.body;
+  secret = secret.trim();
+  let firstname = await db.hgetAsync(constants.secretsNamesKey, secret);
+  if (firstname == null) {
+    res.render("upload", { title: "New Submission", error: "Invalid Secret" });
+    return;
   }
   var data = {
     key: id,
@@ -93,26 +93,22 @@ router.post("/submit", function(req, res, next) {
     });
   }
 
-  req.files.file.mv(`uploads/${id}`, err => {
+  req.files.file.mv(`uploads/${id}`, async err => {
     if (err) {
       return res.render("upload", { title: "New Submission", error: err });
     }
-    db.lpushAsync(constants.queueName, JSON.stringify(data)).then(() => {
-      db.publish(constants.pubSubName, "new");
-    });
-    db.hsetAsync(constants.resultsKey, id, "").then(() => {
-      res.redirect(`/submission/${id}`);
-    });
-    db.hsetAsync(
-      constants.nameIdKey,
-      sanitizer.sanitize(req.body.firstname),
-      id
-    );
-    db.hsetAsync(
-      constants.secretIdKey,
-      sanitizer.sanitize(req.body.secret),
-      id
-    );
+    await Promise.all([
+      // This lets us look up the results
+      db.hsetAsync(constants.resultsKey, id, ""),
+
+      //This lets a user look up all their submissions, in submission order
+      db.lpushAsync(`${constants.secretsSubmissionPrefix}`, id),
+      db.lpushAsync(constants.queueName, JSON.stringify(data))
+    ]);
+
+    db.publish(constants.pubSubName, "new");
+
+    res.redirect(`/submission/${id}`);
   });
 });
 

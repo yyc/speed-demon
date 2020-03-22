@@ -17,17 +17,19 @@ for (var i = 0; i < files.length; i++) {
 
 module.exports = {
   testfiles,
-  // large tests, with minimum time taken. Any less and cheating is likely
+  // large tests, with minimum time taken.
+  // Any less and it's likely that the person is either cheating or using an inexact solution
   largeTests: {
     //    "2.in": 1000
   },
   // In milliseconds
-  executionTimeout: 20000,
+  executionTimeout: 20000, // 20s per file
   queueName: "processQueue",
   pubSubName: "processPubSub",
+  secretsSubmissionPrefix: "secretSubmission/",
   resultsKey: "results",
   nameIdKey: "names",
-  secretIdKey: "secrets",
+  // secretIdKey: "secrets",
   leaderboardKey: "leaderboard",
   cheatersKey: "cheaters",
   secretsNamesKey: "secretName",
