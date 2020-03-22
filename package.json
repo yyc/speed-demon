@@ -11,6 +11,7 @@
     "body-parser": "^1.19.0",
     "cookie-parser": "~1.4.3",
     "core-worker": "^0.3.1",
+    "csv-parser": "^2.3.2",
     "debug": "^4.1.1",
     "dockerode": "^2.4.1",
     "express": "^4.17.1",
