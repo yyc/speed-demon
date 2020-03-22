@@ -58,7 +58,6 @@ router.post("/submit", async (req, res, next) => {
   var id = shortid.generate();
   if (
     !req.body ||
-    !req.body.firstname ||
     !req.body.secret ||
     !req.body.classname ||
     !req.files ||
@@ -77,7 +76,7 @@ router.post("/submit", async (req, res, next) => {
   var data = {
     key: id,
     classname: sanitizer.escape(req.body.classname),
-    name: sanitizer.sanitize(req.body.firstname),
+    name: firstname,
     secret: sanitizer.sanitize(req.body.secret)
   };
   if (req.files.file.mimetype == "application/zip") {

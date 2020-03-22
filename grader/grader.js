@@ -140,7 +140,10 @@ async function runTestCase(filedata, files, result) {
     } else {
       console.error(`exec error for ${command}: ${error}`);
       // It's possible to abuse the runtimeError to get the test data, so truncate that
-      result.runtimeError = proc.instance.instance.output;
+      // truncate both the number of lines and the length of each line, so it's exceedingly difficult to get stuff out
+      let output_lines = proc.instance.instance.output;
+      let output = output_lines.slice(0, 50).map(line => line.substring(0, 90));
+      result.runtimeError = output.join("\n");
     }
     return await complete(filedata, result);
   }
@@ -199,7 +202,7 @@ async function complete(filedata, results) {
     promises.push(
       db.hsetAsync(constants.secretsNamesKey, filedata.secret, name)
     );
-    promises.push(db.zaddAsync(constants.leaderboardKey, time, filedata.name));
+    promises.push(db.zaddAsync(constants.leaderboardKey, time, name));
   }
   await Promise.all(promises);
 }
