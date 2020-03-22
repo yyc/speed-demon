@@ -1,11 +1,11 @@
 <div class="text-center">
 	<h3> Detailed Results for submission {{filename}} </h3>
 	{{#each results}}
-		{{#if this}}
-			<h5> Result for {{@key}}: PASSED </h5>
-		{{else}}
-			<h5> Result for {{@key}}: FAILED </h5>
-		{{/if}}
+	{{#if this}}
+	<h5> Result for {{@key}}: PASSED </h5>
+	{{else}}
+	<h5> Result for {{@key}}: FAILED </h5>
+	{{/if}}
 	{{/each}}
 	{{# if correct}}
 	<h3 style="color:green"> SUBMISSION PASSED </h3>
@@ -13,10 +13,10 @@
 	<script type="text/javascript">
 		var data = JSON.parse(decodeURIComponent('{{{allTimes}}}'));
 		var div = "div.histogram";
-		$(document).ready(function(){
-			drawHistogram(div, data);
-			$(window).resize(function() {
-				drawHistogram(div, data);
+		$(document).ready(function () {
+			drawHistogram(div, data, {{ runtime }});
+		$(window).resize(function () {
+			drawHistogram(div, data, {{ runtime }});
 			});
 		});
 	</script>
@@ -24,8 +24,9 @@
 	<h3 style="color:red"> SUBMISSION FAILED </h3>
 	{{/if}}
 	{{# if error}}
-		Error: <pre>{{error}}</pre>
+	Error:
+	<pre>{{error}}</pre>
 	{{/if}}
 </div>
-<div class="histogram" >
+<div class="histogram">
 </div>

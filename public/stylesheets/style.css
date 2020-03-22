@@ -4,7 +4,7 @@ body {
 }
 
 a {
-  color: #00B7FF;
+  color: #00b7ff;
 }
 
 rect {
@@ -41,4 +41,12 @@ line {
 
 pre {
   text-align: left;
+}
+
+.specification-line {
+  fill: none;
+  stroke: #ff0000;
+  stroke-width: 1px;
+  stroke-dasharray: 5, 5;
+  shape-rendering: auto;
 }
