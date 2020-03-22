@@ -50,8 +50,9 @@ router.get("/", function(req, res, next) {
   });
 });
 
-router.get("/submit", function(req, res, next) {
-  res.render("upload", { title: "New Submission" });
+router.get("/submit", async function(req, res, next) {
+  let queueLength = await db.llenAsync(constants.queueName);
+  res.render("upload", { title: "New Submission", queueLength });
 });
 
 router.post("/submit", async (req, res, next) => {

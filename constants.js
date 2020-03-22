@@ -24,6 +24,13 @@ module.exports = {
   },
   // In milliseconds
   executionTimeout: 20000, // 20s per file
+  timeouts: {
+    // Configuration for dynamic timeout
+    minTotalExecution: 40000, // 40s for total execution
+    maxTotalExecution: 120000, // 2 minutes when there isn't
+    targetWaitTime: 20 * 60 * 1000 // target a maximum wait time of 20 minutes
+  },
+  executionTimeout: 20000, // 20s per file
   queueName: "processQueue",
   pubSubName: "processPubSub",
   secretsSubmissionPrefix: "secretSubmission/",

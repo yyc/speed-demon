@@ -7,6 +7,7 @@ let fs = require("fs");
 
 const constants = require("../constants");
 const testfiles = constants.testfiles;
+const { getDockerProcess, getExecutionTimeAllotment } = require("./utils");
 
 let db = redis.createClient(constants.redisConnectionOptions);
 let sub = redis.createClient(constants.redisConnectionOptions);
@@ -14,8 +15,6 @@ sub.subscribe(constants.pubSubName);
 
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
-
-const cwd = process.cwd();
 
 // Processes any pending jobs in the queue,
 // or waits for a pubsub
@@ -38,16 +37,18 @@ function messagePromise() {
 }
 
 async function listen() {
+  let queueLength = 0;
   while (true) {
-    let length = await db.llenAsync(constants.queueName);
-    if (length == 0) {
+    queueLength = await db.llenAsync(constants.queueName);
+    if (queueLength == 0) {
       await messagePromise();
+    } else {
+      await processTestCase(getExecutionTimeAllotment(queueLength));
     }
-    await processTestCase();
   }
 }
 
-async function processTestCase() {
+async function processTestCase(timeAllotment) {
   let filedata_str = await db.lpopAsync(constants.queueName);
 
   // someone beat us to the punch
@@ -91,13 +92,14 @@ async function processTestCase() {
     );
     await compileProcess.death();
   } catch (e) {
-    console.log();
+    console.error(e);
     var output = compileProcess.instance.instance.output
       .join("")
       .replace(/<error>/g, "");
     return await error(filedata, output);
   }
-  return test(filedata);
+  let files = Object.keys(testfiles);
+  return runTestCase(filedata, files, timeAllotment);
 }
 
 function error(filedata, err) {
@@ -105,83 +107,77 @@ function error(filedata, err) {
   return complete(filedata, { success: false, results: {}, compileError: err });
 }
 
-function test(filedata) {
-  var files = Object.keys(testfiles);
-  return runTestCase(filedata, files, { success: false, results: {} });
-}
-
-async function runTestCase(filedata, files, result) {
-  if (files.length == 0) {
-    result.success = true;
-    try {
-      return await complete(filedata, result);
-    } catch (e) {
-      console.error(e);
-    }
-    return;
-  }
-  let startTime = Date.now();
-  let filename = files.shift();
-  let proc = getDockerProcess(
-    `java -classpath /submission -Xmx1500m ${filedata.classname} /testfile`,
-    [
-      `grader/java/${filedata.key}:/submission`,
-      // mount as readonly, so people can't do funny things like modify the input file
-      // Also, only mount the input file so they can't cheat by looking for the .out file
-      `grader/testcases/${filename}:/testfile:ro`
-    ]
-  );
-
+async function runTestCase(filedata, files, totalTimeout) {
+  let result = { success: false, results: {} };
+  let proc;
+  let timedOut = false;
   setTimeout(() => {
     if (proc.instance.instance.isRunning) {
+      timedOut = true;
       proc.kill();
     }
-  }, constants.executionTimeout);
+  }, totalTimeout);
+  for (let filename of files) {
+    let startTime = Date.now();
+    proc = getDockerProcess(
+      `java -classpath /submission -Xmx1500m ${filedata.classname} /testfile`,
+      [
+        `grader/java/${filedata.key}:/submission`,
+        // mount as readonly, so people can't do funny things like modify the input file
+        // Also, only mount the input file so they can't cheat by looking for the .out file
+        `grader/testcases/${filename}:/testfile:ro`
+      ]
+    );
 
-  try {
-    await proc.death();
-  } catch (error) {
-    // Kill the program if it times out
-    result.results[filename] = false;
-    if (Date.now() - startTime > constants.executionTimeout) {
-      result.runtimeError = "Time Limit Exceeded";
-    } else {
-      console.error(`exec error for ${command}: ${error}`);
-      // It's possible to abuse the runtimeError to get the test data, so truncate that
-      // truncate both the number of lines and the length of each line, so it's exceedingly difficult to get stuff out
-      let output_lines = proc.instance.instance.output;
-      let output = output_lines.slice(0, 50).map(line => line.substring(0, 90));
-      result.runtimeError = output.join("\n");
-    }
-    return await complete(filedata, result);
-  }
-
-  let output = proc.instance.instance.output.join("");
-  console.log(`completed ${filename} ${output}`);
-  if (output == testfiles[filename]) {
-    let runtime = Date.now() - startTime;
-    if (
-      constants.largeTests[filename] &&
-      runtime < constants.largeTests[filename]
-    ) {
-      result.results = [];
-      result.runtimeError =
-        "CHEATING DETECTED\nHardcoding is not appreciated >:(";
-      db.zadd(constants.cheatersKey, runtime, filedata.name);
+    try {
+      await proc.death();
+      // Sometimes it gets killed but exits with 0
+      if (timedOut) {
+        throw Exception();
+      }
+    } catch (error) {
+      // Kill the program if it times out
+      result.results[filename] = false;
+      if (timedOut) {
+        result.runtimeError = "Time Limit Exceeded.";
+        if (totalTimeout < constants.timeouts.maxTotalExecution) {
+          result.runtimeError +=
+            `\nYour submission was given a ${totalTimeout /
+              1000}s to finish all test cases, based on the size of the current queue.\n` +
+            "If you need more time, try submitting when there are fewer submissions in the queue.";
+        }
+      } else {
+        console.error(`exec error for ${command}: ${error}`);
+        // It's possible to abuse the runtimeError to get the test data, so truncate that
+        // truncate both the number of lines and the length of each line, so it's exceedingly difficult to get stuff out
+        let output_lines = proc.instance.instance.output;
+        let output = output_lines
+          .slice(0, 50)
+          .map(line => line.substring(0, 90));
+        result.runtimeError = output.join("\n");
+      }
       return await complete(filedata, result);
     }
-    result.results[filename] = runtime;
-    return await runTestCase(filedata, files, result);
-  } else {
-    result.results[filename] = false;
-    if (output.includes("<error>")) {
-      console.log(output);
-      result.runtimeError = output.replace(/<error>/g, "");
+
+    let output = proc.instance.instance.output.join("");
+    console.log(`completed ${filename} ${output}`);
+    if (output == testfiles[filename]) {
+      let runtime = Date.now() - startTime;
+      result.results[filename] = runtime;
+      continue;
     } else {
-      result.runtimeError = "Wrong Answer";
+      result.results[filename] = false;
+      if (output.includes("<error>")) {
+        console.log(output);
+        result.runtimeError = output.replace(/<error>/g, "");
+      } else {
+        result.runtimeError = "Wrong Answer";
+      }
+      return await complete(filedata, result);
     }
-    return await complete(filedata, result);
   }
+  result.success = true;
+  return await complete(filedata, result);
 }
 
 async function complete(filedata, results) {
@@ -213,23 +209,6 @@ async function complete(filedata, results) {
     promises.push(db.zaddAsync(constants.leaderboardKey, time, name));
   }
   await Promise.all(promises);
-}
-
-/* 
-Execute the java code in a docker container. This gives us several advantages:
-1. Isolating the code, so they can't mess up the machine we're running the grader on
-  NB: if they manage to escape the container, just give them a medal and ask them to use their energy more productively elsewhere
-2. Allows us to mount just the test input file in readonly mode, so they can't modify it or look for the corresponding .out file
-3. Restricts networking, so they can't send the input file to themselves.
-4. More portable, since we don't have to mess with a possibly existing java installation. 
-*/
-function getDockerProcess(command, volumes = []) {
-  let docker_command = ["docker run --rm --network none"];
-  docker_command.push(...volumes.map(vol => `-v ${cwd}/${vol}`));
-  docker_command.push("openjdk:12");
-  docker_command.push(command);
-  console.log(docker_command.join(" "));
-  return cw.process(docker_command.join(" "));
 }
 
 start();
