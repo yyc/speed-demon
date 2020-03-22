@@ -8,8 +8,10 @@ function drawHistogram(reference, data, mypoint) {
   //data.push(80);
   //data = d3.range(1000).map(d3.random.normal(20, 5));
   max = -1;
+  min = Infinity;
   for (var i = 0; i < data.length; i++) {
     max = Math.max(max, data[i]);
+    min = Math.min(min, data[i]);
   }
 
   var histogram = d3.layout.histogram().bins(Math.max(10, max / 2))(data);
@@ -24,7 +26,7 @@ function drawHistogram(reference, data, mypoint) {
     .rangeRoundBands([40, width + 40]);
 
   function xscale(xval) {
-    return 40 + (width * xval) / max;
+    return 40 + (width * (xval - min)) / max;
   }
   var ymax = d3.max(
     histogram.map(function(d) {
@@ -77,7 +79,7 @@ function drawHistogram(reference, data, mypoint) {
     .text("Number of submissions ->");
 
   var ticks = x.domain().filter(function(d, i) {
-    return !(i % 5);
+    return !(i % 3);
   });
   var formatxAxis = d3.format(".0f");
 
@@ -100,7 +102,7 @@ function drawHistogram(reference, data, mypoint) {
     .append("g")
     .attr("class", "y axis")
     .attr("transform", "translate(" + 40 + ",0)")
-    .call(yAxis.ticks(5));
+    .call(yAxis.ticks(5, "d"));
 
   let g = svg
     .append("g")
@@ -117,7 +119,6 @@ function drawHistogram(reference, data, mypoint) {
       return y(d.y2);
     })
     .attr("x1", function(d) {
-      console.log(d.x1, xscale(d.x1));
       return xscale(d.x1);
     })
     .attr("x2", function(d) {
