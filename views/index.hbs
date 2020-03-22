@@ -1,23 +1,23 @@
 <table class="table">
-    <thead>
-      <tr>
-        <th>Username</th>
-        <th>Runtime</th>
-      </tr>
-    </thead>
-    <tbody>
-    	{{#each leaders}}
-        <tr>
-        <td>{{name}}</td>
-        <td>{{time}}s</td>
-      	</tr>
-    	{{/each}}
-    </tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Runtime</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each leaders}}
+    <tr>
+      <td>{{name}}</td>
+      <td>{{time}}s</td>
+    </tr>
+    {{/each}}
+  </tbody>
 </table>
 {{#if cheaters.length}}
-  <h2>Wall Of 🔔🔔🔔Shame</h2>
-  Filthy Cheaters:
-  {{#each cheaters}}
-    <div>{{this}}</div>
-  {{/each}}
+<h2>Wall Of 🔔🔔🔔Shame</h2>
+Filthy Cheaters:
+{{#each cheaters}}
+<div>{{this}}</div>
+{{/each}}
 {{/if}}

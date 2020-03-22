@@ -15,7 +15,6 @@ sub.subscribe(constants.pubSubName);
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 
-var mutex = false;
 // Processes any pending jobs in the queue,
 // or waits for a pubsub
 function start() {
