@@ -43,7 +43,7 @@ router.get("/", function(req, res, next) {
       }
     }, false);
     res.render("index", {
-      title: "CS2040 Speed Demon Leaderboard",
+      title: "CS2040S Speed Demon Leaderboard",
       leaders,
       cheaters
     });
