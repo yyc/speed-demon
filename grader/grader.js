@@ -147,7 +147,8 @@ async function runTestCase(filedata, files, totalTimeout) {
             "If you need more time, try submitting when there are fewer submissions in the queue.";
         }
       } else {
-        console.error(`exec error for ${command}: ${error}`);
+        //console.error(`exec error for ${command}: ${error}`);
+        console.error(`exec error: ${error}`);
         // It's possible to abuse the runtimeError to get the test data, so truncate that
         // truncate both the number of lines and the length of each line, so it's exceedingly difficult to get stuff out
         let output_lines = proc.instance.instance.output;
